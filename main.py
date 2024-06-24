@@ -1,32 +1,32 @@
 import discord
 from discord.ext import commands
-from discord import app_commands
+from utils.cog_loader import load_cogs
 import os
 from dotenv import load_dotenv
-
 load_dotenv()
-TOKEN = os.getenv("DISCORD_TOKEN")
-GUILD_ID = int(os.getenv("GUILD_ID"))
 
-intents = discord.Intents.default()
-bot = commands.Bot(command_prefix="/", intents=intents,
-                   case_insensitive=False,)
-#tree = app_commands.CommandTree(bot)
+TOKEN = os.getenv("TOKEN")
+GUILD_ID = os.getenv("GUILD_ID")
+APPLICATION_ID = os.getenv("APPLICATION_ID")
 
-@bot.event
-async def on_ready():
+class MyClinet(commands.Bot) :
+    def __init__ (self):
+        super().__init__(command_prefix="/", intents=discord.Intents.all(),
+                         case_insensitive=False, applpication_id = APPLICATION_ID)
 
-    print(f'Bot is ready. Logged in as {bot.user}')
-    await bot.load_extension("cogs.meme")
+    async def setup_hook(self):
+        # Load cogs
+        await load_cogs(self)  # Await the load_cogs function
 
-@bot.command()
-async def sync(ctx):
-    print("sync command")
-    if ctx.author.id == 852579745300086835:
-        await bot.tree.sync()
-        await ctx.send('Command tree synced.')
-    else:
-        await ctx.send('You must be the owner to use this command!')
+        # Sync command tree with a specific guild
+        await self.tree.sync(guild=discord.Object(id=GUILD_ID))
 
-# Run the bot
+    async def on_ready(self):
+        print(f'{self.user} is now Online!')
+
+
+bot = MyClinet()
+
+
+
 bot.run(TOKEN)
